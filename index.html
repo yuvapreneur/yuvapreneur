@@ -48,8 +48,7 @@
     #reader{user-select:none}
     #reader img{pointer-events:none}
   </style>
-  <!-- Razorpay checkout loader -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+  <!-- Direct payment link - no external scripts needed -->
 </head>
 <body>
   <header class="top">
@@ -57,7 +56,7 @@
       <div class="logo">🚀 yuvapreneur.in</div>
       <div>
         <button class="btn btn-primary small" onclick="openLogin()">Login</button>
-        <button class="btn btn-outline small" onclick="scrollToId('enroll')">Create account</button>
+        <button class="btn btn-outline small" onclick="openEnrollmentForm()">Create account</button>
       </div>
     </div>
   </header>
@@ -84,7 +83,7 @@
         <span class="small">📖 Modules unlock sequentially</span>
       </div>
       <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="scrollToId('enroll')">Enroll Now (₹1)</button>
+        <button class="btn btn-primary" onclick="openEnrollmentForm()">Enroll Now (₹1)</button>
         <a class="btn btn-outline" href="#modules">See Modules →</a>
       </div>
     </section>
@@ -337,9 +336,8 @@
       cd.textContent = `${h}:${m}:${s}`;
     },1000);
 
-    // Configuration
-    const RAZORPAY_KEY_ID = 'rzp_live_R6NyOWKBnKScPC';
-    const API_BASE_URL = 'https://api.yuvapreneur.in'; // Replace with your actual API endpoint
+    // Configuration - Direct payment link only
+    const PAYMENT_LINK = 'https://rzp.io/rzp/WkSmxWB5';
     
     // Simple in-memory demo store (NOT PRODUCTION - replace with your backend)
     const store = { users: {}, modulesUnlocked: {} };
@@ -347,33 +345,37 @@
     function scrollToId(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
 
     function openLogin(){ document.getElementById('loginDlg').showModal(); }
+    
+    function openEnrollmentForm(){ 
+      scrollToId('enroll');
+      // Focus on the first input field for better UX
+      setTimeout(() => {
+        const firstInput = document.querySelector('#enroll input[name="name"]');
+        if (firstInput) firstInput.focus();
+      }, 500);
+    }
     function openForgot(e){ e && e.preventDefault(); document.getElementById('loginDlg').close(); document.getElementById('forgotDlg').showModal(); return false; }
 
     // Handle payment for main course - Direct payment link
-    async function handlePay(formData) {
-      try {
-        // Store user data locally for demo purposes
-        const key = formData.email || formData.phone;
-        store.users[key] = { ...formData, paid: false, userId: Date.now().toString() };
-        localStorage.setItem('yuv_userKey', key);
-        
-        // Show payment instructions
-        const confirmed = confirm(`Payment Instructions:
-        
+    function handlePay(formData) {
+      // Store user data locally for demo purposes
+      const key = formData.email || formData.phone;
+      store.users[key] = { ...formData, paid: false, userId: Date.now().toString() };
+      localStorage.setItem('yuv_userKey', key);
+      
+      // Show payment instructions
+      const confirmed = confirm(`Payment Instructions:
+      
 1. You'll be redirected to Razorpay payment page
 2. Complete your payment of ₹1
 3. After payment, you'll be redirected back
 4. Your account will be activated automatically
 
 Click OK to proceed to payment.`);
-        
-        if (confirmed) {
-          // Redirect to Razorpay payment link
-          window.location.href = 'https://rzp.io/rzp/WkSmxWB5';
-        }
-      } catch (error) {
-        console.error('Payment error:', error);
-        alert('Failed to initiate payment. Please try again.');
+      
+      if (confirmed) {
+        // Redirect to Razorpay payment link
+        window.location.href = PAYMENT_LINK;
       }
     }
 
@@ -583,7 +585,7 @@ Click OK to proceed to payment.`);
     }
 
     // Bonus payment functionality - Direct payment link
-    async function buyBonus(bonusId, amount) {
+    function buyBonus(bonusId, amount) {
       const userKey = localStorage.getItem('yuv_userKey');
       
       if (!userKey) {
@@ -608,7 +610,7 @@ Click OK to proceed to payment.`);
         store.bonuses[bonusId] = { amount, purchased: false };
         
         // Redirect to Razorpay payment link
-        window.location.href = 'https://rzp.io/rzp/WkSmxWB5';
+        window.location.href = PAYMENT_LINK;
       }
     }
 
